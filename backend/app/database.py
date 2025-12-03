@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import List, Optional, Any
 import os
 
+import json
+
 # 获取项目根目录
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -12,7 +14,15 @@ DB_PATH = os.path.join(DATA_DIR, "recipes.db")
 # 数据库文件路径
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_PATH}")
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+def my_json_serializer(*args, **kwargs):
+    """自定义 JSON 序列化器，保留非 ASCII 字符"""
+    return json.dumps(*args, ensure_ascii=False, **kwargs)
+
+engine = create_engine(
+    DATABASE_URL, 
+    connect_args={"check_same_thread": False},
+    json_serializer=my_json_serializer
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

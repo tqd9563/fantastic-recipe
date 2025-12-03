@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Modal, Button, Form, Row, Col, Image } from 'react-bootstrap';
-import { FaTrash, FaPlus } from 'react-icons/fa';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { Trash2, Plus, Upload, Image as ImageIcon } from 'lucide-react';
 
-const RecipeModal = ({ show, handleClose, handleSave, recipe }) => {
+const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -17,22 +24,24 @@ const RecipeModal = ({ show, handleClose, handleSave, recipe }) => {
   const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
-    if (recipe) {
-      setFormData({
-        name: recipe.name || '',
-        description: recipe.description || '',
-        cooking_time: recipe.cooking_time || '',
-        servings: recipe.servings || '',
-        difficulty: recipe.difficulty || '',
-        ingredients: recipe.ingredients || [],
-        seasonings: recipe.seasonings || [],
-        steps: recipe.steps || []
-      });
-      setImagePreview(recipe.image_url);
-    } else {
-      resetForm();
+    if (open) {
+      if (recipe) {
+        setFormData({
+          name: recipe.name || '',
+          description: recipe.description || '',
+          cooking_time: recipe.cooking_time || '',
+          servings: recipe.servings || '',
+          difficulty: recipe.difficulty || '',
+          ingredients: recipe.ingredients || [],
+          seasonings: recipe.seasonings || [],
+          steps: recipe.steps || []
+        });
+        setImagePreview(recipe.image_url);
+      } else {
+        resetForm();
+      }
     }
-  }, [recipe, show]);
+  }, [recipe, open]);
 
   const resetForm = () => {
     setFormData({
@@ -66,69 +75,6 @@ const RecipeModal = ({ show, handleClose, handleSave, recipe }) => {
     }
   };
 
-  // 食材操作
-  const addIngredient = () => {
-    setFormData(prev => ({
-      ...prev,
-      ingredients: [...prev.ingredients, { name: '', amount: '' }]
-    }));
-  };
-
-  const updateIngredient = (index, field, value) => {
-    const newIngredients = [...formData.ingredients];
-    newIngredients[index][field] = value;
-    setFormData(prev => ({ ...prev, ingredients: newIngredients }));
-  };
-
-  const removeIngredient = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      ingredients: prev.ingredients.filter((_, i) => i !== index)
-    }));
-  };
-
-  // 配料操作
-  const addSeasoning = () => {
-    setFormData(prev => ({
-      ...prev,
-      seasonings: [...prev.seasonings, '']
-    }));
-  };
-
-  const updateSeasoning = (index, value) => {
-    const newSeasonings = [...formData.seasonings];
-    newSeasonings[index] = value;
-    setFormData(prev => ({ ...prev, seasonings: newSeasonings }));
-  };
-
-  const removeSeasoning = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      seasonings: prev.seasonings.filter((_, i) => i !== index)
-    }));
-  };
-
-  // 步骤操作
-  const addStep = () => {
-    setFormData(prev => ({
-      ...prev,
-      steps: [...prev.steps, '']
-    }));
-  };
-
-  const updateStep = (index, value) => {
-    const newSteps = [...formData.steps];
-    newSteps[index] = value;
-    setFormData(prev => ({ ...prev, steps: newSteps }));
-  };
-
-  const removeStep = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      steps: prev.steps.filter((_, i) => i !== index)
-    }));
-  };
-
   const handleSubmit = () => {
     if (!formData.name) {
       alert('请输入菜品名称');
@@ -142,7 +88,6 @@ const RecipeModal = ({ show, handleClose, handleSave, recipe }) => {
     if (formData.servings) submitData.append('servings', formData.servings);
     if (formData.difficulty) submitData.append('difficulty', formData.difficulty);
     
-    // 过滤空值
     const validIngredients = formData.ingredients.filter(i => i.name.trim());
     const validSeasonings = formData.seasonings.filter(s => s.trim());
     const validSteps = formData.steps.filter(s => s.trim());
@@ -158,175 +103,208 @@ const RecipeModal = ({ show, handleClose, handleSave, recipe }) => {
     handleSave(submitData);
   };
 
+  // Helper to update nested arrays
+  const updateArrayItem = (arrayName, index, field, value) => {
+    setFormData(prev => {
+      const newArray = [...prev[arrayName]];
+      if (field) {
+        newArray[index] = { ...newArray[index], [field]: value };
+      } else {
+        newArray[index] = value;
+      }
+      return { ...prev, [arrayName]: newArray };
+    });
+  };
+
+  const removeArrayItem = (arrayName, index) => {
+    setFormData(prev => ({
+      ...prev,
+      [arrayName]: prev[arrayName].filter((_, i) => i !== index)
+    }));
+  };
+
+  const addArrayItem = (arrayName, initialValue) => {
+    setFormData(prev => ({
+      ...prev,
+      [arrayName]: [...prev[arrayName], initialValue]
+    }));
+  };
+
   return (
-    <Modal show={show} onHide={handleClose} size="lg" backdrop="static">
-      <Modal.Header closeButton>
-        <Modal.Title>{recipe ? '编辑食谱' : '添加食谱'}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form>
-          <Form.Group className="mb-3">
-            <Form.Label>菜品图片</Form.Label>
-            <Form.Control type="file" accept="image/*" onChange={handleImageChange} />
-            {imagePreview && (
-              <div className="mt-2">
-                <Image src={imagePreview} thumbnail style={{ maxHeight: '200px' }} />
-              </div>
-            )}
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>菜品名称 <span className="text-danger">*</span></Form.Label>
-            <Form.Control
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>菜品描述</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={2}
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-            />
-          </Form.Group>
-
-          <Row className="mb-3">
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>烹饪时间（分钟）</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="cooking_time"
-                  value={formData.cooking_time}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>份数</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="servings"
-                  value={formData.servings}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>难度</Form.Label>
-                <Form.Select
-                  name="difficulty"
-                  value={formData.difficulty}
-                  onChange={handleChange}
-                >
-                  <option value="">请选择</option>
-                  <option value="简单">简单</option>
-                  <option value="中等">中等</option>
-                  <option value="困难">困难</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-          </Row>
-
-          <div className="mb-4">
-            <Form.Label>食材用料</Form.Label>
-            {formData.ingredients.map((ing, index) => (
-              <Row key={index} className="mb-2">
-                <Col xs={5}>
-                  <Form.Control
-                    placeholder="食材名称"
-                    value={ing.name}
-                    onChange={(e) => updateIngredient(index, 'name', e.target.value)}
-                  />
-                </Col>
-                <Col xs={5}>
-                  <Form.Control
-                    placeholder="用量"
-                    value={ing.amount}
-                    onChange={(e) => updateIngredient(index, 'amount', e.target.value)}
-                  />
-                </Col>
-                <Col xs={2}>
-                  <Button variant="danger" size="sm" onClick={() => removeIngredient(index)}>
-                    <FaTrash />
-                  </Button>
-                </Col>
-              </Row>
-            ))}
-            <Button variant="outline-primary" size="sm" onClick={addIngredient}>
-              <FaPlus /> 添加食材
-            </Button>
-          </div>
-
-          <div className="mb-4">
-            <Form.Label>配料表</Form.Label>
-            {formData.seasonings.map((seasoning, index) => (
-              <Row key={index} className="mb-2">
-                <Col xs={10}>
-                  <Form.Control
-                    placeholder="配料名称"
-                    value={seasoning}
-                    onChange={(e) => updateSeasoning(index, e.target.value)}
-                  />
-                </Col>
-                <Col xs={2}>
-                  <Button variant="danger" size="sm" onClick={() => removeSeasoning(index)}>
-                    <FaTrash />
-                  </Button>
-                </Col>
-              </Row>
-            ))}
-            <Button variant="outline-primary" size="sm" onClick={addSeasoning}>
-              <FaPlus /> 添加配料
-            </Button>
-          </div>
-
-          <div className="mb-4">
-            <Form.Label>烹饪步骤</Form.Label>
-            {formData.steps.map((step, index) => (
-              <Row key={index} className="mb-2">
-                <Col xs={10}>
-                  <div className="d-flex">
-                    <span className="me-2 mt-2 badge bg-secondary rounded-circle" style={{width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>{index + 1}</span>
-                    <Form.Control
-                      as="textarea"
-                      rows={2}
-                      placeholder="描述步骤..."
-                      value={step}
-                      onChange={(e) => updateStep(index, e.target.value)}
-                    />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-6 py-4 border-b">
+          <DialogTitle>{recipe ? '编辑食谱' : '创建新食谱'}</DialogTitle>
+          <DialogDescription>
+            填写下面的信息来{recipe ? '更新' : '添加'}你的美味食谱。
+          </DialogDescription>
+        </DialogHeader>
+        
+        <ScrollArea className="flex-1 px-6 py-4">
+          <div className="space-y-6">
+            {/* Image Upload */}
+            <div className="flex justify-center">
+              <label className="relative cursor-pointer group block w-full max-w-sm aspect-video rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 bg-muted/50 hover:bg-muted transition-all overflow-hidden">
+                <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                {imagePreview ? (
+                  <>
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-white font-medium flex items-center gap-2"><Upload className="w-4 h-4" /> 更换图片</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                    <ImageIcon className="w-8 h-8 mb-2 opacity-50" />
+                    <span className="text-sm">点击上传菜品照片</span>
                   </div>
-                </Col>
-                <Col xs={2}>
-                  <Button variant="danger" size="sm" onClick={() => removeStep(index)}>
-                    <FaTrash />
-                  </Button>
-                </Col>
-              </Row>
-            ))}
-            <Button variant="outline-primary" size="sm" onClick={addStep}>
-              <FaPlus /> 添加步骤
-            </Button>
-          </div>
+                )}
+              </label>
+            </div>
 
-        </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>取消</Button>
-        <Button variant="primary" onClick={handleSubmit}>保存</Button>
-      </Modal.Footer>
-    </Modal>
+            {/* Basic Info */}
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">菜品名称 <span className="text-destructive">*</span></Label>
+                <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="例如：红烧肉" />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="description">描述</Label>
+                <Textarea id="description" name="description" value={formData.description} onChange={handleChange} placeholder="简单介绍一下这道菜..." className="resize-none" />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="cooking_time">时间 (分钟)</Label>
+                  <Input type="number" id="cooking_time" name="cooking_time" value={formData.cooking_time} onChange={handleChange} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="servings">份数 (人)</Label>
+                  <Input type="number" id="servings" name="servings" value={formData.servings} onChange={handleChange} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="difficulty">难度</Label>
+                  <Select 
+                    value={formData.difficulty} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="选择" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="简单">简单</SelectItem>
+                      <SelectItem value="中等">中等</SelectItem>
+                      <SelectItem value="困难">困难</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Ingredients */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base">食材用料</Label>
+                <Button variant="outline" size="sm" onClick={() => addArrayItem('ingredients', { name: '', amount: '' })}>
+                  <Plus className="w-4 h-4 mr-1" /> 添加
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {formData.ingredients.map((ing, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <Input 
+                      placeholder="食材名 (如: 猪肉)" 
+                      value={ing.name} 
+                      onChange={(e) => updateArrayItem('ingredients', idx, 'name', e.target.value)}
+                      className="flex-1"
+                    />
+                    <Input 
+                      placeholder="用量 (如: 500g)" 
+                      value={ing.amount} 
+                      onChange={(e) => updateArrayItem('ingredients', idx, 'amount', e.target.value)}
+                      className="w-24 sm:w-32"
+                    />
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => removeArrayItem('ingredients', idx)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+                {formData.ingredients.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4 bg-muted/30 rounded-md border border-dashed">
+                    还没有添加食材
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Seasonings */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base">配料/调味</Label>
+                <Button variant="outline" size="sm" onClick={() => addArrayItem('seasonings', '')}>
+                  <Plus className="w-4 h-4 mr-1" /> 添加
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {formData.seasonings.map((s, idx) => (
+                  <div key={idx} className="flex items-center bg-muted rounded-md pl-3 pr-1 py-1 border">
+                    <input 
+                      className="bg-transparent border-none focus:outline-none text-sm w-20 sm:w-24"
+                      value={s}
+                      onChange={(e) => updateArrayItem('seasonings', idx, null, e.target.value)}
+                      placeholder="配料名"
+                    />
+                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-background/50" onClick={() => removeArrayItem('seasonings', idx)}>
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+                {formData.seasonings.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center w-full py-2">无配料</p>
+                )}
+              </div>
+            </div>
+
+            {/* Steps */}
+            <div className="space-y-4 pb-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base">烹饪步骤</Label>
+                <Button variant="outline" size="sm" onClick={() => addArrayItem('steps', '')}>
+                  <Plus className="w-4 h-4 mr-1" /> 添加
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {formData.steps.map((step, idx) => (
+                  <div key={idx} className="flex gap-3 items-start group">
+                    <div className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-medium mt-2">
+                      {idx + 1}
+                    </div>
+                    <Textarea 
+                      placeholder={`描述第 ${idx + 1} 步...`}
+                      value={step}
+                      onChange={(e) => updateArrayItem('steps', idx, null, e.target.value)}
+                      className="flex-1 min-h-[80px]"
+                    />
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity mt-2" onClick={() => removeArrayItem('steps', idx)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+
+        <DialogFooter className="px-6 py-4 border-t">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>取消</Button>
+          <Button onClick={handleSubmit}>保存食谱</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
 export default RecipeModal;
-
