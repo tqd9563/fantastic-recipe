@@ -16,8 +16,8 @@ from backend.app.database import get_db, RecipeDB, init_db
 
 # 获取项目根目录
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-FRONTEND_STATIC_DIR = os.path.join(BASE_DIR, "frontend", "static")
-FRONTEND_TEMPLATE_DIR = os.path.join(BASE_DIR, "frontend", "templates")
+FRONTEND_STATIC_DIR = os.path.join(BASE_DIR, "frontend-react", "dist", "assets")
+FRONTEND_TEMPLATE_DIR = os.path.join(BASE_DIR, "frontend-react", "dist")
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads", "recipes")
 
 # 确保上传目录存在
@@ -38,15 +38,8 @@ app.add_middleware(
 )
 
 # 挂载静态文件
-app.mount("/static", StaticFiles(directory=FRONTEND_STATIC_DIR), name="static")
+app.mount("/assets", StaticFiles(directory=FRONTEND_STATIC_DIR), name="assets")
 app.mount("/uploads", StaticFiles(directory=os.path.join(BASE_DIR, "uploads")), name="uploads")
-
-
-@app.get("/")
-async def root():
-    """返回前端页面"""
-    index_path = os.path.join(FRONTEND_TEMPLATE_DIR, "index.html")
-    return FileResponse(index_path)
 
 
 @app.get("/api/recipes", response_model=List[Recipe])
@@ -215,6 +208,15 @@ async def delete_recipe(recipe_id: int, db: Session = Depends(get_db)):
     db.delete(db_recipe)
     db.commit()
     return {"message": "食谱已删除"}
+
+
+@app.get("/{full_path:path}")
+async def serve_react_app(full_path: str):
+    """为所有非API路由提供React应用"""
+    index_path = os.path.join(FRONTEND_TEMPLATE_DIR, "index.html")
+    if not os.path.exists(index_path):
+        raise HTTPException(status_code=404, detail="Frontend build not found. Run 'npm run build' in frontend-react directory.")
+    return FileResponse(index_path)
 
 
 if __name__ == "__main__":
