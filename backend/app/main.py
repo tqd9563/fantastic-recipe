@@ -16,8 +16,8 @@ from backend.app.database import get_db, RecipeDB, init_db
 
 # 获取项目根目录
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-FRONTEND_STATIC_DIR = os.path.join(BASE_DIR, "frontend-react", "dist", "assets")
-FRONTEND_TEMPLATE_DIR = os.path.join(BASE_DIR, "frontend-react", "dist")
+FRONTEND_STATIC_DIR = os.path.join(BASE_DIR, "frontend", "dist", "assets")
+FRONTEND_TEMPLATE_DIR = os.path.join(BASE_DIR, "frontend", "dist")
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads", "recipes")
 
 # 确保上传目录存在
