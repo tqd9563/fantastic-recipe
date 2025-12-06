@@ -132,7 +132,7 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-2xl max-h-[90vh] grid grid-rows-[auto_1fr_auto] p-0 gap-0">
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>{recipe ? '编辑食谱' : '创建新食谱'}</DialogTitle>
           <DialogDescription>
@@ -140,7 +140,7 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 px-6 py-4">
+        <ScrollArea className="overflow-y-auto px-6 py-4">
           <div className="space-y-6">
             {/* Image Upload */}
             <div className="flex justify-center">
