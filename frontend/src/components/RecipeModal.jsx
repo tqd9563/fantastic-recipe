@@ -112,6 +112,20 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
     setFormData(prev => ({ ...prev, tags: prev.tags.filter(tag => tag !== tagToRemove) }));
   };
 
+  const handleIngredientKeyDown = (e, index) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addArrayItem('ingredients', { name: '', amount: '' });
+      // Simple focus attempt for the new input
+      setTimeout(() => {
+        const inputs = document.querySelectorAll('[data-ingredient-name]');
+        if (inputs[inputs.length - 1]) {
+            inputs[inputs.length - 1].focus();
+        }
+      }, 50);
+    }
+  };
+
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -337,11 +351,13 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
                       value={ing.name} 
                       onChange={(e) => updateArrayItem('ingredients', idx, 'name', e.target.value)}
                       className="flex-1"
+                      data-ingredient-name
                     />
                     <Input 
                       placeholder="用量 (如: 500g)" 
                       value={ing.amount} 
                       onChange={(e) => updateArrayItem('ingredients', idx, 'amount', e.target.value)}
+                      onKeyDown={(e) => handleIngredientKeyDown(e, idx)}
                       className="w-24 sm:w-32"
                     />
                     <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => removeArrayItem('ingredients', idx)}>
@@ -350,8 +366,8 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
                   </div>
                 ))}
                 {formData.ingredients.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4 bg-muted/30 rounded-md border border-dashed">
-                    还没有添加食材
+                  <p className="text-sm text-muted-foreground text-center py-4 bg-muted/30 rounded-md border border-dashed cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => addArrayItem('ingredients', { name: '', amount: '' })}>
+                    点击添加第一个食材
                   </p>
                 )}
               </div>
@@ -361,27 +377,48 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label className="text-base">配料/调味</Label>
-                <Button variant="outline" size="sm" onClick={() => addArrayItem('seasonings', '')}>
-                  <Plus className="w-4 h-4 mr-1" /> 添加
-                </Button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {formData.seasonings.map((s, idx) => (
-                  <div key={idx} className="flex items-center bg-muted rounded-md pl-3 pr-1 py-1 border">
+                  <div key={idx} className="flex items-center bg-muted rounded-md pl-3 pr-1 py-1 border transition-colors focus-within:border-sage-400 focus-within:ring-1 focus-within:ring-sage-400/30">
                     <input 
-                      className="bg-transparent border-none focus:outline-none text-sm w-20 sm:w-24"
+                      className="bg-transparent border-none focus:outline-none text-sm w-20 sm:w-24 placeholder:text-muted-foreground/50"
                       value={s}
                       onChange={(e) => updateArrayItem('seasonings', idx, null, e.target.value)}
                       placeholder="配料名"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addArrayItem('seasonings', '');
+                          // Focus optimization
+                          setTimeout(() => {
+                            const inputs = document.querySelectorAll('.seasoning-input');
+                            if (inputs[inputs.length - 1]) inputs[inputs.length - 1].focus();
+                          }, 50);
+                        }
+                      }}
+                      data-seasoning-input
                     />
-                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-background/50" onClick={() => removeArrayItem('seasonings', idx)}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-background/50 ml-1 text-muted-foreground hover:text-destructive" onClick={() => removeArrayItem('seasonings', idx)}>
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
                 ))}
-                {formData.seasonings.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center w-full py-2">无配料</p>
-                )}
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                        addArrayItem('seasonings', '');
+                        // Focus optimization
+                          setTimeout(() => {
+                            const inputs = document.querySelectorAll('[data-seasoning-input]');
+                            if (inputs[inputs.length - 1]) inputs[inputs.length - 1].focus();
+                          }, 50);
+                    }} 
+                    className="h-[34px] border-dashed text-muted-foreground hover:text-sage-700 hover:border-sage-300 hover:bg-sage-50"
+                >
+                  <Plus className="w-3 h-3 mr-1" /> 添加
+                </Button>
               </div>
             </div>
 
