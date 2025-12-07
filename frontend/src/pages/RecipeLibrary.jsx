@@ -96,7 +96,7 @@ const RecipeLibrary = () => {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input 
                 placeholder="搜索食谱、食材..." 
-                className="pl-9 bg-muted/50 border-none focus-visible:bg-background"
+                className="pl-9 bg-muted/50 border-none focus-visible:bg-background !pl-11"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
             />
