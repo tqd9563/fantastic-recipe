@@ -19,12 +19,14 @@ const RecipeLibrary = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [editingRecipe, setEditingRecipe] = useState(null);
+  const [loading, setLoading] = useState(true); // Add loading state
 
   useEffect(() => {
     fetchRecipes();
   }, []);
 
   useEffect(() => {
+    // ... existing filter logic ...
     const filtered = recipes.filter(recipe =>
       recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (recipe.description && recipe.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -34,11 +36,16 @@ const RecipeLibrary = () => {
   }, [searchTerm, recipes]);
 
   const fetchRecipes = async () => {
+    setLoading(true);
     try {
+      console.log("Fetching recipes...");
       const data = await getRecipes();
-      setRecipes(data);
+      console.log("Fetched recipes:", data);
+      setRecipes(data || []);
     } catch (error) {
       console.error('Failed to fetch recipes:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -125,25 +132,34 @@ const RecipeLibrary = () => {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
-        {viewMode === 'gallery' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredRecipes.map(recipe => (
-                    <RecipeCard key={recipe.id} recipe={recipe} onClick={() => handleView(recipe)} />
-                ))}
+        {loading ? (
+            <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600 mb-4"></div>
+                <p>正在加载美味食谱...</p>
             </div>
         ) : (
-            <div className="space-y-2">
-                {filteredRecipes.map(recipe => (
-                    <RecipeListItem key={recipe.id} recipe={recipe} onClick={() => handleView(recipe)} />
-                ))}
-            </div>
-        )}
-        
-        {filteredRecipes.length === 0 && (
-            <div className="h-64 flex flex-col items-center justify-center text-muted-foreground">
-                <Utensils className="h-12 w-12 mb-4 opacity-20" />
-                <p>没有找到相关食谱</p>
-            </div>
+            <>
+                {viewMode === 'gallery' ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {filteredRecipes.map(recipe => (
+                            <RecipeCard key={recipe.id} recipe={recipe} onClick={() => handleView(recipe)} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {filteredRecipes.map(recipe => (
+                            <RecipeListItem key={recipe.id} recipe={recipe} onClick={() => handleView(recipe)} />
+                        ))}
+                    </div>
+                )}
+                
+                {filteredRecipes.length === 0 && (
+                    <div className="h-64 flex flex-col items-center justify-center text-muted-foreground">
+                        <Utensils className="h-12 w-12 mb-4 opacity-20" />
+                        <p>没有找到相关食谱</p>
+                    </div>
+                )}
+            </>
         )}
       </div>
 

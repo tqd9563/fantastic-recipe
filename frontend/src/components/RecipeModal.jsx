@@ -103,6 +103,18 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
     }
   }, [recipe, open]);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // ...
 
   const handleSubmit = () => {
