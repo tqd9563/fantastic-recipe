@@ -1,5 +1,5 @@
-from sqlalchemy import create_engine, String, Integer, DateTime, JSON
-from sqlalchemy.orm import declarative_base, sessionmaker, Mapped, mapped_column
+from sqlalchemy import create_engine, String, Integer, DateTime, JSON, ForeignKey
+from sqlalchemy.orm import declarative_base, sessionmaker, Mapped, mapped_column, relationship
 from datetime import datetime
 from typing import List, Optional, Any
 import os
@@ -59,9 +59,11 @@ class PlanDB(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     date: Mapped[str] = mapped_column(String, index=True) # YYYY-MM-DD
-    recipe_id: Mapped[int] = mapped_column(Integer)
+    recipe_id: Mapped[int] = mapped_column(Integer, ForeignKey("recipes.id"))
     is_completed: Mapped[bool] = mapped_column(Integer, default=0) # 0=False, 1=True in SQLite
     type: Mapped[str] = mapped_column(String, default="dinner") # lunch, dinner, etc.
+
+    recipe = relationship("RecipeDB")
 
 
 # 创建数据库表

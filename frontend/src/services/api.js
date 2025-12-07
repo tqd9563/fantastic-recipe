@@ -39,5 +39,25 @@ export const deleteRecipe = async (id) => {
   return response.data;
 };
 
+export const getPlans = async (startDate, endDate) => {
+  const response = await api.get(`/plans?start_date=${startDate}&end_date=${endDate}`);
+  return response.data;
+};
+
+export const createPlan = async (planData) => {
+  const response = await api.post('/plans', planData);
+  return response.data;
+};
+
+export const deletePlan = async (id) => {
+  const response = await api.delete(`/plans/${id}`);
+  return response.data;
+};
+
+export const generatePlan = async (days = 7) => {
+  const response = await api.post(`/plans/generate?days=${days}`);
+  return response.data;
+};
+
 export default api;
 

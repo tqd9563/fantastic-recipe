@@ -12,7 +12,8 @@ import uvicorn
 from PIL import Image
 
 from models.recipe import Recipe, RecipeCreate, Ingredient
-from backend.app.database import get_db, RecipeDB, init_db
+from models.plan import Plan, PlanCreate
+from backend.app.database import get_db, RecipeDB, init_db, PlanDB
 
 # 获取项目根目录
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -242,6 +243,61 @@ async def delete_recipe(recipe_id: int, db: Session = Depends(get_db)):
     db.delete(db_recipe)
     db.commit()
     return {"message": "食谱已删除"}
+
+
+@app.get("/api/plans", response_model=List[Plan])
+async def get_plans(start_date: str, end_date: str, db: Session = Depends(get_db)):
+    """获取日期范围内的计划"""
+    plans = db.query(PlanDB).filter(PlanDB.date >= start_date, PlanDB.date <= end_date).all()
+    return plans
+
+@app.post("/api/plans", response_model=Plan)
+async def create_plan(plan: PlanCreate, db: Session = Depends(get_db)):
+    """创建计划"""
+    db_plan = PlanDB(**plan.dict())
+    db.add(db_plan)
+    db.commit()
+    db.refresh(db_plan)
+    return db_plan
+
+@app.delete("/api/plans/{plan_id}")
+async def delete_plan(plan_id: int, db: Session = Depends(get_db)):
+    """删除计划"""
+    db.query(PlanDB).filter(PlanDB.id == plan_id).delete()
+    db.commit()
+    return {"message": "deleted"}
+
+@app.post("/api/plans/generate")
+async def generate_plan(days: int = 7, db: Session = Depends(get_db)):
+    """随机生成未来几天的计划"""
+    import random
+    from datetime import date, timedelta
+    
+    today = date.today()
+    recipes = db.query(RecipeDB).all()
+    if not recipes:
+        raise HTTPException(status_code=400, detail="没有足够的食谱来生成计划")
+        
+    generated_plans = []
+    # 清除未来几天的现有计划？暂时不清除，直接追加
+    
+    for i in range(days):
+        current_date = (today + timedelta(days=i)).isoformat() # 从今天开始
+        
+        # Lunch
+        lunch_recipe = random.choice(recipes)
+        lunch_plan = PlanDB(date=current_date, recipe_id=lunch_recipe.id, type="lunch")
+        db.add(lunch_plan)
+        generated_plans.append(lunch_plan)
+        
+        # Dinner
+        dinner_recipe = random.choice(recipes)
+        dinner_plan = PlanDB(date=current_date, recipe_id=dinner_recipe.id, type="dinner")
+        db.add(dinner_plan)
+        generated_plans.append(dinner_plan)
+        
+    db.commit()
+    return {"message": f"Generated plans for {days} days", "count": len(generated_plans)}
 
 
 @app.get("/{full_path:path}")
