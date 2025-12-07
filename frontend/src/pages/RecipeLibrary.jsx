@@ -141,7 +141,7 @@ const RecipeLibrary = () => {
         ) : (
             <>
                 {viewMode === 'gallery' ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
                         {filteredRecipes.map(recipe => (
                             <RecipeCard key={recipe.id} recipe={recipe} onClick={() => handleView(recipe)} />
                         ))}
@@ -184,34 +184,32 @@ const RecipeLibrary = () => {
 };
 
 const RecipeCard = ({ recipe, onClick }) => (
-    <Card className="group cursor-pointer overflow-hidden hover:shadow-md transition-all border-muted" onClick={onClick}>
-        <div className="relative aspect-[4/3] bg-muted overflow-hidden">
-            {recipe.image_url ? (
-                <img src={recipe.image_url} alt={recipe.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-sage-50">
-                    <Utensils className="h-8 w-8 opacity-30" />
-                </div>
-            )}
-            <div className="absolute top-2 right-2 flex gap-1">
-                {recipe.rating && <Badge className="bg-white/90 text-orange-500 hover:bg-white">⭐ {recipe.rating}</Badge>}
+    <div 
+        className="group relative cursor-pointer overflow-hidden rounded-xl bg-muted break-inside-avoid mb-4 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300" 
+        onClick={onClick}
+    >
+        {recipe.image_url ? (
+            <img 
+                src={recipe.image_url} 
+                alt={recipe.name} 
+                className="w-full h-auto block object-cover transition-transform duration-700 group-hover:scale-110" 
+            />
+        ) : (
+            <div className="w-full aspect-[3/4] flex flex-col items-center justify-center text-muted-foreground bg-sage-50/30">
+                <Utensils className="h-12 w-12 opacity-10 mb-3" />
+                <span className="text-sm font-medium opacity-40 px-6 text-center line-clamp-2">{recipe.name}</span>
             </div>
-        </div>
-        <div className="p-4">
-            <h3 className="font-bold text-lg mb-1 line-clamp-1 group-hover:text-sage-700 transition-colors">{recipe.name}</h3>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {recipe.cooking_time || '-'}m</span>
-                <span className="flex items-center gap-1"><Flame className="h-3 w-3" /> {recipe.difficulty || '-'}</span>
+        )}
+        
+        {/* Hover Overlay */}
+        {recipe.image_url && (
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-5">
+                <h3 className="text-white font-bold text-lg leading-snug transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 drop-shadow-md line-clamp-2">
+                    {recipe.name}
+                </h3>
             </div>
-            <div className="flex flex-wrap gap-1">
-                {(recipe.tags || []).slice(0, 3).map((tag, i) => (
-                    <Badge key={i} variant="outline" className={cn("text-[10px] px-1.5 h-5 border font-normal", getTagColor(tag))}>
-                        {tag}
-                    </Badge>
-                ))}
-            </div>
-        </div>
-    </Card>
+        )}
+    </div>
 );
 
 const RecipeListItem = ({ recipe, onClick }) => (
