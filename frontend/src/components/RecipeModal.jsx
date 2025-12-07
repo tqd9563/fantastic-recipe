@@ -417,7 +417,7 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
 
         <DialogFooter className="px-6 py-4 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)}>取消</Button>
-          <Button onClick={handleSubmit}>保存食谱</Button>
+          <Button onClick={handleSubmit} className="bg-sage-600 hover:bg-sage-700 text-white">保存食谱</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

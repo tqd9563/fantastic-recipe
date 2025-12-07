@@ -12,8 +12,8 @@ const RecipeDetailDrawer = ({ recipe, open, onOpenChange, onEdit, onDelete }) =>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fixed right-0 top-0 z-50 h-full w-full max-w-md border-l bg-background p-0 shadow-lg duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-lg rounded-none translate-x-0 left-auto">
-        <div className="flex flex-col h-full">
+      <DialogContent className="fixed inset-y-0 right-0 z-50 h-full w-full max-w-md border-l bg-background p-0 shadow-2xl data-[state=open]:duration-500 data-[state=closed]:duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-lg rounded-none sm:rounded-none overflow-hidden gap-0 translate-x-0 !translate-y-0 top-0 left-auto bottom-auto [&>button]:hidden">
+        <div className="flex flex-col h-full max-h-screen">
             {/* Header Image */}
             <div className="relative h-64 bg-muted shrink-0">
                 {recipe.image_url ? (
@@ -26,7 +26,7 @@ const RecipeDetailDrawer = ({ recipe, open, onOpenChange, onEdit, onDelete }) =>
                 <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white rounded-full"
+                    className="absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white rounded-full z-10"
                     onClick={() => onOpenChange(false)}
                 >
                     <X className="h-5 w-5" />
@@ -43,7 +43,7 @@ const RecipeDetailDrawer = ({ recipe, open, onOpenChange, onEdit, onDelete }) =>
                 </div>
             </div>
 
-            <ScrollArea className="flex-1 p-6">
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
                 <div className="space-y-6">
                     {/* Meta Stats */}
                     <div className="flex justify-between items-center p-4 bg-sage-50 rounded-xl border border-sage-100">
@@ -124,10 +124,10 @@ const RecipeDetailDrawer = ({ recipe, open, onOpenChange, onEdit, onDelete }) =>
                         </div>
                     </div>
                 </div>
-            </ScrollArea>
-
+            </div>
+            
             {/* Footer Actions */}
-            <div className="p-4 border-t bg-background flex justify-between gap-4">
+            <div className="p-4 border-t bg-background flex justify-between gap-4 shrink-0 z-10">
                 <Button 
                     variant="outline" 
                     className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/5 border-destructive/20"
