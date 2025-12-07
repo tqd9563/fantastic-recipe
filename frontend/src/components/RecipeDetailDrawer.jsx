@@ -4,6 +4,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Trash2, Edit, X, Clock, Users, Flame } from 'lucide-react';
+import { cn } from "@/lib/utils";
+import { getTagColor } from "@/lib/tagUtils";
 
 const RecipeDetailDrawer = ({ recipe, open, onOpenChange, onEdit, onDelete }) => {
   if (!recipe) return null;
@@ -33,7 +35,7 @@ const RecipeDetailDrawer = ({ recipe, open, onOpenChange, onEdit, onDelete }) =>
                     <h2 className="text-2xl font-bold text-white">{recipe.name}</h2>
                     <div className="flex gap-2 mt-2">
                         {recipe.tags && recipe.tags.map((tag, i) => (
-                            <Badge key={i} variant="secondary" className="bg-white/20 text-white hover:bg-white/30 border-none">
+                            <Badge key={i} variant="secondary" className={cn("border-none opacity-90 hover:opacity-100", getTagColor(tag))}>
                                 {tag}
                             </Badge>
                         ))}

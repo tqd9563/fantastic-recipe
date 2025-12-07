@@ -7,7 +7,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
-import { Trash2, Plus, Upload, Image as ImageIcon } from 'lucide-react';
+import { Trash2, Plus, Upload, Image as ImageIcon, X } from 'lucide-react';
+import { cn } from "@/lib/utils";
+import { getTagColor } from "@/lib/tagUtils";
 
 const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
   const [formData, setFormData] = useState({
@@ -91,17 +93,25 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
   // Actually, let's just use a text input for tags and split it on submit.
   // So formData.tags will be a string in this component's local state while editing?
   // Or I add a separate state `tagsInput`.
-  const [tagsInput, setTagsInput] = useState('');
+  const [currentTagInput, setCurrentTagInput] = useState('');
 
-  useEffect(() => {
-    if (open) {
-        if (recipe) {
-            setTagsInput((recipe.tags || []).join(', '));
-        } else {
-            setTagsInput('');
-        }
+  const handleTagKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const newTag = currentTagInput.trim().replace(/,/g, '');
+      if (newTag && !formData.tags.includes(newTag)) {
+        setFormData(prev => ({ ...prev, tags: [...prev.tags, newTag] }));
+        setCurrentTagInput('');
+      }
+    } else if (e.key === 'Backspace' && !currentTagInput && formData.tags.length > 0) {
+      setFormData(prev => ({ ...prev, tags: prev.tags.slice(0, -1) }));
     }
-  }, [recipe, open]);
+  };
+
+  const removeTag = (tagToRemove) => {
+    setFormData(prev => ({ ...prev, tags: prev.tags.filter(tag => tag !== tagToRemove) }));
+  };
+
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -131,8 +141,7 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
     if (formData.difficulty) submitData.append('difficulty', formData.difficulty);
     
     // Process tags
-    const tagsList = tagsInput.split(/[,，]\s*/).filter(t => t.trim());
-    submitData.append('tags', JSON.stringify(tagsList));
+    submitData.append('tags', JSON.stringify(formData.tags));
     
     if (formData.rating) submitData.append('rating', formData.rating);
     if (formData.mastery_level) submitData.append('mastery_level', formData.mastery_level);
@@ -251,13 +260,23 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="tags">标签 (用逗号分隔)</Label>
-                <Input 
-                    id="tags" 
-                    value={tagsInput} 
-                    onChange={(e) => setTagsInput(e.target.value)} 
-                    placeholder="例如：川菜, 辣, 猪肉" 
-                />
+                <Label htmlFor="tags">标签</Label>
+                <div className="flex flex-wrap gap-2 p-2 min-h-[42px] rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-all">
+                    {formData.tags.map((tag, index) => (
+                        <span key={index} className={cn("flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border animate-in fade-in zoom-in duration-200", getTagColor(tag))}>
+                            {tag}
+                            <button onClick={() => removeTag(tag)} className="hover:text-foreground/70 ml-0.5 focus:outline-none"><X className="h-3 w-3" /></button>
+                        </span>
+                    ))}
+                    <input 
+                        id="tags" 
+                        value={currentTagInput}
+                        onChange={(e) => setCurrentTagInput(e.target.value)}
+                        onKeyDown={handleTagKeyDown}
+                        placeholder={formData.tags.length === 0 ? "输入标签，按回车或逗号添加..." : ""}
+                        className="flex-1 bg-transparent outline-none text-sm min-w-[120px] placeholder:text-muted-foreground"
+                    />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

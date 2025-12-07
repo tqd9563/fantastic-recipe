@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Filter, LayoutGrid, List as ListIcon, Clock, Flame, Utensils } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { getTagColor } from "@/lib/tagUtils";
 
 const RecipeLibrary = () => {
   const [recipes, setRecipes] = useState([]);
@@ -204,7 +205,7 @@ const RecipeCard = ({ recipe, onClick }) => (
             </div>
             <div className="flex flex-wrap gap-1">
                 {(recipe.tags || []).slice(0, 3).map((tag, i) => (
-                    <Badge key={i} variant="secondary" className="text-[10px] px-1.5 h-5 bg-sage-50 text-sage-700 hover:bg-sage-100 border-sage-100">
+                    <Badge key={i} variant="outline" className={cn("text-[10px] px-1.5 h-5 border font-normal", getTagColor(tag))}>
                         {tag}
                     </Badge>
                 ))}
@@ -229,9 +230,11 @@ const RecipeListItem = ({ recipe, onClick }) => (
         </div>
         <div className="flex-1 min-w-0">
             <h3 className="font-medium truncate group-hover:text-sage-700">{recipe.name}</h3>
-            <div className="flex gap-2 mt-0.5">
+            <div className="flex gap-2 mt-1">
                 {(recipe.tags || []).map((tag, i) => (
-                    <span key={i} className="text-xs text-muted-foreground">#{tag}</span>
+                    <Badge key={i} variant="outline" className={cn("text-[10px] px-1.5 py-0 h-auto font-normal", getTagColor(tag))}>
+                        {tag}
+                    </Badge>
                 ))}
             </div>
         </div>
