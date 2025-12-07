@@ -41,8 +41,27 @@ class RecipeDB(Base):
     servings: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     difficulty: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     image_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    
+    # 新增字段
+    tags: Mapped[List[Any]] = mapped_column(JSON, nullable=False, default=list)  # 标签：分类、口味等
+    mastery_level: Mapped[str] = mapped_column(String, default="never_tried")  # 熟练度
+    last_cooked_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)  # 末次食用时间
+    cook_count: Mapped[int] = mapped_column(Integer, default=0)  # 总制作次数
+    rating: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # 评分 1-5
+    
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class PlanDB(Base):
+    """计划表模型"""
+    __tablename__ = "plans"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    date: Mapped[str] = mapped_column(String, index=True) # YYYY-MM-DD
+    recipe_id: Mapped[int] = mapped_column(Integer)
+    is_completed: Mapped[bool] = mapped_column(Integer, default=0) # 0=False, 1=True in SQLite
+    type: Mapped[str] = mapped_column(String, default="dinner") # lunch, dinner, etc.
 
 
 # 创建数据库表

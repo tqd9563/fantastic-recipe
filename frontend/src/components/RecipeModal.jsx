@@ -16,6 +16,9 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
     cooking_time: '',
     servings: '',
     difficulty: '',
+    tags: [],
+    rating: '',
+    mastery_level: 'never_tried',
     ingredients: [],
     seasonings: [],
     steps: []
@@ -32,6 +35,9 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
           cooking_time: recipe.cooking_time || '',
           servings: recipe.servings || '',
           difficulty: recipe.difficulty || '',
+          tags: recipe.tags || [],
+          rating: recipe.rating || '',
+          mastery_level: recipe.mastery_level || 'never_tried',
           ingredients: recipe.ingredients || [],
           seasonings: recipe.seasonings || [],
           steps: recipe.steps || []
@@ -50,6 +56,9 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
       cooking_time: '',
       servings: '',
       difficulty: '',
+      tags: [],
+      rating: '',
+      mastery_level: 'never_tried',
       ingredients: [],
       seasonings: [],
       steps: []
@@ -63,17 +72,38 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleTagsChange = (e) => {
+    const value = e.target.value;
+    // Update local string representation for now, will process on submit?
+    // Actually better to keep tags as array in state, but input needs string.
+    // Let's keep input value as derived from state, and update state on change.
+    // But split only on blur or similar might be better for UX, or just simple split.
+    // Simplest: keep tags as array in state, update it on every change by splitting.
+    const tagsArray = value.split(/,\s*/).filter(Boolean); 
+    // Wait, splitting on every keystroke prevents typing "tag, t".
+    // Let's store a separate "tagsInput" string state if needed, or just handle it simply.
+    // I'll just change how I store/render it.
+    // Let's assume user types "tag1, tag2"
+    // I'll modify the logic below to use a separate string state for input if I can, 
+    // but simpler: handle it inside the component logic.
   };
+  
+  // Actually, let's just use a text input for tags and split it on submit.
+  // So formData.tags will be a string in this component's local state while editing?
+  // Or I add a separate state `tagsInput`.
+  const [tagsInput, setTagsInput] = useState('');
+
+  useEffect(() => {
+    if (open) {
+        if (recipe) {
+            setTagsInput((recipe.tags || []).join(', '));
+        } else {
+            setTagsInput('');
+        }
+    }
+  }, [recipe, open]);
+
+  // ...
 
   const handleSubmit = () => {
     if (!formData.name) {
@@ -88,6 +118,13 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
     if (formData.servings) submitData.append('servings', formData.servings);
     if (formData.difficulty) submitData.append('difficulty', formData.difficulty);
     
+    // Process tags
+    const tagsList = tagsInput.split(/[,，]\s*/).filter(t => t.trim());
+    submitData.append('tags', JSON.stringify(tagsList));
+    
+    if (formData.rating) submitData.append('rating', formData.rating);
+    if (formData.mastery_level) submitData.append('mastery_level', formData.mastery_level);
+
     const validIngredients = formData.ingredients.filter(i => i.name.trim());
     const validSeasonings = formData.seasonings.filter(s => s.trim());
     const validSteps = formData.steps.filter(s => s.trim());
@@ -199,6 +236,55 @@ const RecipeModal = ({ open, onOpenChange, handleSave, recipe }) => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="tags">标签 (用逗号分隔)</Label>
+                <Input 
+                    id="tags" 
+                    value={tagsInput} 
+                    onChange={(e) => setTagsInput(e.target.value)} 
+                    placeholder="例如：川菜, 辣, 猪肉" 
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="rating">评分</Label>
+                    <Select 
+                        value={String(formData.rating || '')} 
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, rating: value ? Number(value) : '' }))}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="选择评分" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="1">⭐</SelectItem>
+                            <SelectItem value="2">⭐⭐</SelectItem>
+                            <SelectItem value="3">⭐⭐⭐</SelectItem>
+                            <SelectItem value="4">⭐⭐⭐⭐</SelectItem>
+                            <SelectItem value="5">⭐⭐⭐⭐⭐</SelectItem>
+                        </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="mastery_level">熟练度</Label>
+                    <Select 
+                        value={formData.mastery_level} 
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, mastery_level: value }))}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="选择熟练度" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="never_tried">🔴 从未尝试</SelectItem>
+                            <SelectItem value="novice">🟡 新手入门</SelectItem>
+                            <SelectItem value="skilled">🟢 熟练掌握</SelectItem>
+                            <SelectItem value="master">👑 大厨级别</SelectItem>
+                        </SelectContent>
+                    </Select>
+                  </div>
               </div>
             </div>
 

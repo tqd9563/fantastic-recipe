@@ -43,9 +43,29 @@ app.mount("/uploads", StaticFiles(directory=os.path.join(BASE_DIR, "uploads")), 
 
 
 @app.get("/api/recipes", response_model=List[Recipe])
-async def get_recipes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+async def get_recipes(
+    skip: int = 0, 
+    limit: int = 100, 
+    tag: Optional[str] = None,
+    rating: Optional[int] = None,
+    mastery_level: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
     """获取所有食谱"""
-    recipes = db.query(RecipeDB).offset(skip).limit(limit).all()
+    query = db.query(RecipeDB)
+    
+    if rating:
+        query = query.filter(RecipeDB.rating == rating)
+        
+    if mastery_level:
+        query = query.filter(RecipeDB.mastery_level == mastery_level)
+    
+    recipes = query.offset(skip).limit(limit).all()
+    
+    if tag:
+        # In-memory filtering for tags
+        recipes = [r for r in recipes if tag in r.tags]
+        
     return recipes
 
 
@@ -94,6 +114,9 @@ async def create_recipe(
     cooking_time: Optional[int] = Form(None),
     servings: Optional[int] = Form(None),
     difficulty: Optional[str] = Form(None),
+    tags: str = Form("[]"),  # JSON 字符串
+    mastery_level: Optional[str] = Form("never_tried"),
+    rating: Optional[int] = Form(None),
     image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
@@ -105,6 +128,7 @@ async def create_recipe(
         ingredients_list = json.loads(ingredients)
         seasonings_list = json.loads(seasonings)
         steps_list = json.loads(steps)
+        tags_list = json.loads(tags)
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="JSON 格式错误")
     
@@ -122,6 +146,9 @@ async def create_recipe(
         cooking_time=cooking_time,
         servings=servings,
         difficulty=difficulty,
+        tags=tags_list,
+        mastery_level=mastery_level,
+        rating=rating,
         image_url=image_url,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
@@ -143,6 +170,9 @@ async def update_recipe(
     cooking_time: Optional[int] = Form(None),
     servings: Optional[int] = Form(None),
     difficulty: Optional[str] = Form(None),
+    tags: str = Form("[]"),
+    mastery_level: Optional[str] = Form("never_tried"),
+    rating: Optional[int] = Form(None),
     image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
@@ -158,6 +188,7 @@ async def update_recipe(
         ingredients_list = json.loads(ingredients)
         seasonings_list = json.loads(seasonings)
         steps_list = json.loads(steps)
+        tags_list = json.loads(tags)
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="JSON 格式错误")
     
@@ -182,6 +213,9 @@ async def update_recipe(
     db_recipe.cooking_time = cooking_time
     db_recipe.servings = servings
     db_recipe.difficulty = difficulty
+    db_recipe.tags = tags_list
+    db_recipe.mastery_level = mastery_level
+    db_recipe.rating = rating
     db_recipe.updated_at = datetime.utcnow()
     
     db.commit()
